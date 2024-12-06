@@ -62,70 +62,73 @@ void GrabarByteMaps(EXT_BYTE_MAPS *ext_bytemaps, FILE *fich);
 void GrabarSuperBloque(EXT_SIMPLE_SUPERBLOCK *ext_superblock, FILE *fich);
 void GrabarDatos(EXT_DATOS *memdatos, FILE *fich);
 
-int main() {
-	char comando[LONGITUD_COMANDO];
-	char orden[LONGITUD_COMANDO];
-	char argumento1[LONGITUD_COMANDO];
-	char argumento2[LONGITUD_COMANDO];
+int main(){
+    //Variables para los comandos a ejecutar
+    char comando[LONGITUD_COMANDO];
+    char orden[LONGITUD_COMANDO];
+    char argumento1[LONGITUD_COMANDO];
+    char argumento2[LONGITUD_COMANDO];
 
+    //Iteradores para los bucles, de todos modos, se crean directamente en cada función
+    //(No serían accesibles por alcance a este punto)
     int i, j;
 
+    //Variables con los datos del fichero, superbloque, bytemaps, inodos, directorio y bloques
     EXT_DATOS datosFichero[MAX_BLOQUES_PARTICION];
     EXT_SIMPLE_SUPERBLOCK ext_superblock;
     EXT_BYTE_MAPS ext_bytemaps;
     EXT_BLQ_INODOS ext_blq_inodos;
     EXT_ENTRADA_DIR directorio[MAX_FICHEROS];
     EXT_DATOS memdatos[MAX_BLOQUES_DATOS];
-    FILE *archivoParticion;
 
-    archivoParticion = fopen("particion.bin","r+b");
-    if (archivoParticion == NULL) {
-        perror("Error al abrir el archivo de partición");
+    //Archivo de partición, se abre en formato de lectura, escritura y en formato binario
+    FILE *archivoParticion = fopen("particion.bin", "r+b");
+
+    //Comprueba que el archivo se ha abierto correctamente
+    if(archivoParticion == NULL){
+        //Mensaje de error, termina el programa
+        printf("Error al abrir el archivo de partición...");
         return 1;
     }
 
+    //Comprobado que está abierto, lee el contenido del archivo
     fread(&datosFichero, SIZE_BLOQUE, MAX_BLOQUES_PARTICION, archivoParticion);
 
+    //Va guardando en las variables creadas anteriormente los distintos ajustes del fichero
     memcpy(&ext_superblock, (EXT_SIMPLE_SUPERBLOCK *) &datosFichero[0], SIZE_BLOQUE);
     memcpy(&directorio,     (EXT_ENTRADA_DIR *) &datosFichero[3], SIZE_BLOQUE);
     memcpy(&ext_bytemaps,   (EXT_BLQ_INODOS *) &datosFichero[1], SIZE_BLOQUE);
     memcpy(&ext_blq_inodos, (EXT_BLQ_INODOS *) &datosFichero[2], SIZE_BLOQUE);
     memcpy(&memdatos,       (EXT_DATOS *) &datosFichero[4], MAX_BLOQUES_DATOS*SIZE_BLOQUE);
 
-
-
-    //Bucle infinito, alternativa a for(;;), se "rompe" del mismo modo, con un break
+    //Bucle infinito, alternativa a for(;;), se "rompe"/termina del mismo modo, con un break
     while(1){
+        //Texto para indicar al usuario la escritura de consola
         printf(">> ");
         
-        //Leer entrada del usuario
-        if(fgets(comando, LONGITUD_COMANDO, stdin) == NULL) {
-            printf("Error leyendo la entrada.\n");
-            continue;
-        }
+        //Leer entrada del usuario, si fuera un texto NULO, continúa la ejecución
+        if(fgets(comando, LONGITUD_COMANDO, stdin) == NULL) continue;
 
         //Eliminar el salto de línea del comando
         comando[strcspn(comando, "\n")] = '\0';
 
+        //Comparativa de cada comando
         if(comando[0] == '\0'){                                 continue; //El usuario no escribe valores
         } else if(!strcmp(comando, "salir")){                   break;
         } else if(!strcmp(comando, "info")){                    LeerSuperBloque(&ext_superblock);
         } else if(!strcmp(comando, "bytemaps")){                PrintBytemaps(&ext_bytemaps);
         } else if(!strcmp(comando, "dir")){                     Directorio(directorio, &ext_blq_inodos);
         } else if(sscanf(comando, "imprimir %s", argumento1)){  Imprimir(directorio, &ext_blq_inodos, memdatos, argumento1);
-
-
         } else {
-            // Comando no reconocido
+            //Comando no reconocido
             printf("Comando no reconocido: %s\n", comando);
         }
     }
 
+    //Cierra el archivo y finaliza la ejecución del programa
     fclose(archivoParticion);
-
     return 0;
 }
-
 
 /**
  * @brief Imprime los inodos y bloques del sistema de archivos
