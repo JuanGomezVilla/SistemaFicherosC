@@ -11,4 +11,4 @@ Sistema de ficheros simple basado en C
 
 
 ## Compilar proyecto
-gcc -o practica simul_ext_esqueleto.c && practica
+gcc -o main main.c && main
