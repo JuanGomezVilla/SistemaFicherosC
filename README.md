@@ -1,5 +1,11 @@
 # SistemaFicherosC
-Sistema de ficheros simple basado en C
+
+[![SistemaFicherosC](https://img.shields.io/badge/version-v1.0.0-blue.svg)](#)
+[![SistemaFicherosC](https://img.shields.io/github/license/JuanGomezVilla/FlangerJS)](#)
+
+SistemaFicherosC es un sistema de gestión ficheros simple basado en C, simulando de forma básica el sistema de gestión de ficheros de un sistema operativo convencional.
+
+
 
 
 ## Índice
@@ -49,7 +55,7 @@ Sistema de ficheros simple basado en C
     Inodos: 1 1 1 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
     Bloques [0-25]: 1 1 1 1 0 0 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
     ```
-> [!TIP]
+    > [!TIP]
 > Se recomienda utilizar este comando durante la fase de desarrollo
 - Mostrar los archivos del directorio:
     ```bash
