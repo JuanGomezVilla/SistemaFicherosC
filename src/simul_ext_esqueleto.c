@@ -81,10 +81,20 @@ int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, char *nombreA
  */
 int Imprimir(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_DATOS *memdatos, char *nombre);
 
-
+/**
+ * @brief Función para eliminar un fichero
+ * @param directorio Puntero a la entrada del directorio
+ * @param inodos Puntero al conjunto de inodos
+ * @param ext_bytemaps Puntero a los bytemaps
+ * @param ext_superblock Puntero al superbloque de información
+ * @param nombre Nombre del archivo a eliminar
+ * @param fichero Puntero del fichero a eliminar
+ * @returns Devuelve 0 si todo ha salido correcto, -1 si el archivo no se ha encontrado
+ */
 int Borrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
-           char *nombre,  FILE *fich);
+           char *nombre, FILE *fichero);
+
 int Copiar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
            EXT_DATOS *memdatos, char *nombreorigen, char *nombredestino,  FILE *fich);
@@ -202,8 +212,24 @@ int main(){
                     printf("El nuevo nombre del archivo ya existe...\n\n");
                     break;
             }
-        } else if(sscanf(comando, "remove %s", argumento1)){    Borrar(directorio, &ext_blq_inodos, &ext_bytemaps, &ext_superblock, argumento1, archivoParticion);
+        } else if(operacion == REMOVE){
+            //Realiza la acción de borrar y comprueba con un switch los resultados
+            switch(Borrar(directorio, &ext_blq_inodos, &ext_bytemaps, &ext_superblock, argumento1, archivoParticion)){
+                //Caso de éxito (teórico, a menos que surga una excepción no controlada)
+                case 0:
+                    //El usuario es informado de que se ha eliminado correctamente
+                    printf("El archivo se ha eliminado correctamente...\n\n");
 
+                    //Graba en los inodos, el bytemaps y el superbloque la información nueva
+                    GrabarInodosyDirectorio(directorio, &ext_blq_inodos, archivoParticion);
+                    GrabarByteMaps(&ext_bytemaps, archivoParticion);
+                    GrabarSuperBloque(&ext_superblock, archivoParticion);
+                    break;
+                case -1:
+                    //Mensaje error
+                    printf("El archivo a eliminar no existe...\n\n");
+                    break;
+            }
         } else if(operacion == NOT_RECOGNIZED) {
             //Comando no reconocido (operacion será equivalente a NOT_RECOGNIZED)
             printf("Comando no reconocido: %s\n\n", comando);
@@ -270,6 +296,18 @@ int ComprobarComando(char *strcomando, char *orden, char *argumento1, char *argu
             return PRINT;
         }
     
+    //Si el comando es eliminar un archivo
+    } else if(resultadoSscanf = sscanf(strcomando, "remove %s", argumento1)){
+        //Si falta un argumento (el nombre del archivo a eliminar)
+        if(resultadoSscanf != 1){
+            //MUestra un mensaje de error
+            printf("ERROR, falta el nombre del archivo...\n\n");
+            return ERROR;
+        } else {
+            //El comando es correcto, envía el código asociado a eliminaciones
+            return REMOVE;
+        }
+
     //Si el comando es salir, el programa devuelve el código asociado a EXIT
     } else if(!strcmp(strcomando, "salir")){
         return EXIT;
@@ -303,7 +341,7 @@ void LeerSuperBloque(EXT_SIMPLE_SUPERBLOCK *psup){
 
 /**
  * @brief Imprime los inodos y bloques del sistema de archivos
- * @param ext_bytemaps Puntero a la estructura EXT_BYTE_MAPS, contiene la información a imprimir
+ * @param ext_bytemaps Puntero a la información de bytemaps
  * @returns void
  */
 void PrintBytemaps(EXT_BYTE_MAPS *ext_bytemaps){
@@ -447,11 +485,54 @@ int Imprimir(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_DATOS *mem
     return 1; //Devuelve 1, la ejecución hipotéticamente se ha ejecutado correctamente 
 }
 
-
+/**
+ * @brief Función para eliminar un fichero
+ * @param directorio Puntero a la entrada del directorio
+ * @param inodos Puntero al conjunto de inodos
+ * @param ext_bytemaps Puntero a los bytemaps
+ * @param ext_superblock Puntero al superbloque de información
+ * @param nombre Nombre del archivo a eliminar
+ * @param fichero Puntero del fichero a eliminar
+ * @returns Devuelve 0 si todo ha salido correcto, -1 si el archivo no se ha encontrado
+ */
 int Borrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_BYTE_MAPS *ext_bytemaps,
-        EXT_SIMPLE_SUPERBLOCK *ext_superblock, char *nombre,  FILE *fich){
+        EXT_SIMPLE_SUPERBLOCK *ext_superblock, char *nombre, FILE *fichero){
+    
+    //Busca el indice del archivo, devuelve como código de error -1 si no se encuentra
+    int indiceInodo = BuscarFichero(directorio, inodos, nombre);
+    if(indiceInodo == -1) return -1;
+    EXT_SIMPLE_INODE inodo = inodos->blq_inodos[indiceInodo]; //Inodo del archivo, que sí existe al llegar a esta línea
 
-    return 1;
+    //Vaciar los BLOQUES del archivo en el bytemap
+    //Se marca cada uno con un 0 (porque está vacío)
+    for(int i=0; i<MAX_NUMS_BLOQUE_INODO; i++) if(inodo.i_nbloque[i] != NULL_BLOQUE) ext_bytemaps->bmap_bloques[inodo.i_nbloque[i]] = 0;
+    ext_bytemaps->bmap_inodos[indiceInodo] = 0; //Establecer a 0 el INODO en el bytemap (para que esté libre)
+
+    //Establecer el tamaño del fichero a 0
+    //Marcar los 7 punteros a bloque de ese inodo con el valor FFFFH
+    //MAX_NUMS_BLOQUE_INODO = 7; NULL_BLOQUE = FFFFH
+    inodo.size_fichero = 0;
+    for(int i=0; i<MAX_NUMS_BLOQUE_INODO; i++) inodo.i_nbloque[i] = NULL_BLOQUE;
+
+    //Guardar los cambios en el conjunto de inodos
+    inodos->blq_inodos[indiceInodo] = inodo;
+
+    //Busca la entrada del directorio para eliminarla a lo largo de todos los ficheros existentes
+    for(int i=0; i<MAX_FICHEROS; i++){
+        //Una vez encontrado el índice del directorio
+        if(directorio[i].dir_inodo == indiceInodo) {
+            memset(directorio[i].dir_nfich, 0, LEN_NFICH); //Elimina el nombre (valor 0)
+            directorio[i].dir_inodo = NULL_INODO; //Elimina el nodo estableciendo uno nulo
+            break;
+        }
+    }
+
+    //Actualiza el superbloque, aumentando el número de inodos y bloques libres
+    ext_superblock->s_free_inodes_count += 1;
+    ext_superblock->s_free_blocks_count += 1;
+
+    //Devuelve 0, lo que quiere decir que todo se ha realizado con éxito (hipotéticamente)
+    return 0;
 }
 
 int Copiar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
