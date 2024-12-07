@@ -7,23 +7,28 @@
 #define LONGITUD_COMANDO 100 //Longitud máxima de un comando
 
 enum Comandos {
-    ERROR = -1,
-    NOTHING = 0,
-    INFO = 1,
-    BYTEMAPS = 2,
-    DIR = 3,
-    RENAME = 4,
-    PRINT = 5,
-    EXIT = 9,
-    NOT_RECOGNIZED = 10
+    ERROR = -1,             /* Código de error */
+    NOTHING = 0,            /* El usuario no realiza acción alguna */
+    INFO = 1,               /* Comando para obtener la información */
+    BYTEMAPS = 2,           /* Comando para obtener los bytemaps */
+    DIR = 3,                /* Comando para mostrar el contenido del directorio */
+    RENAME = 4,             /* Comando para renombrar un archivo */
+    PRINT = 5,              /* Comando para imprimir el contenido de un archivo */
+    REMOVE = 6,             /* Comando para eliminar un archivo */
+    COPY = 7,               /* Comando para copiar un archivo */
+    EXIT = 8,               /* Comando para terminar la ejecución del programa */
+    NOT_RECOGNIZED = 9      /* Comando no reconocido */
 };
 
 /**
- * @brief Imprime los inodos y bloques del sistema de archivos
- * @param ext_bytemaps Puntero a la estructura EXT_BYTE_MAPS, contiene la información a imprimir
- * @returns void
+ * @brief Función para comprobar un comando
+ * @param strcomando Comando a analizar
+ * @param orden Sinceramente, desconozco para que sirve este parámetro o que aplicación podía tener en el esqueleto
+ * @param argumento1 Posible argumento 1 que va después del comando clave
+ * @param argumento2 Posible argumento 2 que va después del argumento 1
+ * @returns Número entero, código asociado a la acción a realizar en base a la interpretación del comando
  */
-void PrintBytemaps(EXT_BYTE_MAPS *ext_bytemaps);
+int ComprobarComando(char *strcomando, char *orden, char *argumento1, char *argumento2);
 
 /**
  * @brief Muestra información detallada sobre el superbloque
@@ -31,6 +36,13 @@ void PrintBytemaps(EXT_BYTE_MAPS *ext_bytemaps);
  * @returns void
  */
 void LeerSuperBloque(EXT_SIMPLE_SUPERBLOCK *psup);
+
+/**
+ * @brief Imprime los inodos y bloques del sistema de archivos
+ * @param ext_bytemaps Puntero a la estructura EXT_BYTE_MAPS, contiene la información a imprimir
+ * @returns void
+ */
+void PrintBytemaps(EXT_BYTE_MAPS *ext_bytemaps);
 
 /**
  * @brief Muestra los archivos existentes, con la información de cada uno
@@ -50,16 +62,6 @@ void Directorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos);
 int BuscarFichero(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, char *nombre);
 
 /**
- * @brief Método para imprimir el contenido de un archivo
- * @param directorio Puntero a la entrada del directorio
- * @param inodos Puntero al conjunto de inodos
- * @param memdatos Puntero al conjunto de bloques de datos
- * @param nombre Nombre del archivo a imprimir
- * @return Devuelve un número entero, -1 si hubo errores, 1 en caso de éxito
- */
-int Imprimir(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_DATOS *memdatos, char *nombre);
-
-/**
  * @brief Renombra un archivo con un nombre antiguo y nuevo pasado por parámetro
  * @param directorio Puntero a la entrada del directorio
  * @param inodos Puntero al conjunto de inodos
@@ -69,13 +71,21 @@ int Imprimir(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_DATOS *mem
  */
 int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, char *nombreAntiguo, char *nombreNuevo);
 
+/**
+ * @brief Método para imprimir el contenido de un archivo
+ * @param directorio Puntero a la entrada del directorio
+ * @param inodos Puntero al conjunto de inodos
+ * @param memdatos Puntero al conjunto de bloques de datos
+ * @param nombre Nombre del archivo a imprimir
+ * @return Devuelve un número entero, -1 si hubo errores, 1 en caso de éxito
+ */
+int Imprimir(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_DATOS *memdatos, char *nombre);
 
 
 //FUNCIONES NO PROCESADAS
 int Borrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
            char *nombre,  FILE *fich);
-int ComprobarComando(char *strcomando, char *orden, char *argumento1, char *argumento2);
 int Copiar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
            EXT_DATOS *memdatos, char *nombreorigen, char *nombredestino,  FILE *fich);
@@ -128,8 +138,6 @@ int main(){
         //Texto para indicar al usuario la escritura de consola
         printf(">> ");
         
-        
-
         //Leer entrada del usuario, si fuera un texto NULO, continúa la ejecución
         if(fgets(comando, LONGITUD_COMANDO, stdin) == NULL) continue;
 
@@ -144,10 +152,22 @@ int main(){
         } else if(operacion == INFO){                   LeerSuperBloque(&ext_superblock);
         } else if(operacion == BYTEMAPS){               PrintBytemaps(&ext_bytemaps);
         } else if(operacion == DIR){                    Directorio(directorio, &ext_blq_inodos);
-        } else if(operacion == RENAME){                 Renombrar(directorio, &ext_blq_inodos, argumento1, argumento2);
+        } else if(operacion == RENAME){                 
+            switch(Renombrar(directorio, &ext_blq_inodos, argumento1, argumento2)){
+                case 0:
+                    printf("El archivo se ha renombrado...\n\n");
+                    break;
+                case -1:
+                    printf("El archivo a renombrar no existe...\n\n");
+                    break;
+                case -2:
+                    printf("El nuevo nombre del archivo ya existe...\n\n");
+                    break;
+            }
+        
         } else if(operacion == PRINT){                  Imprimir(directorio, &ext_blq_inodos, memdatos, argumento1);
         } else if(sscanf(comando, "remove %s", argumento1)){    Borrar(directorio, &ext_blq_inodos, &ext_bytemaps, &ext_superblock, argumento1, archivoParticion);
-        
+
         } else if(operacion == NOT_RECOGNIZED) {
             //Comando no reconocido (operacion será equivalente a NOT_RECOGNIZED)
             printf("Comando no reconocido: %s\n\n", comando);
@@ -157,6 +177,91 @@ int main(){
     //Cierra el archivo y finaliza la ejecución del programa
     fclose(archivoParticion);
     return 0;
+}
+
+
+
+/**
+ * @brief Función para comprobar un comando
+ * @param strcomando Comando a analizar
+ * @param orden Sinceramente, desconozco para que sirve este parámetro o que aplicación podía tener en el esqueleto
+ * @param argumento1 Posible argumento 1 que va después del comando clave
+ * @param argumento2 Posible argumento 2 que va después del argumento 1
+ * @returns Número entero, código asociado a la acción a realizar en base a la interpretación del comando
+ */
+int ComprobarComando(char *strcomando, char *orden, char *argumento1, char *argumento2){
+    //Variable para el resultado de un posible sscanf
+    int resultadoSscanf;
+    
+    //Si el usuario presiona ENTER, el primer caracter del comando es final
+    if(strcomando[0] == '\0'){
+        return NOTHING; //Devuelve NOTHING
+
+    //Si el comando es info, devuelve el valor de INFO, que tiene un código asociado
+    } else if(!strcmp(strcomando, "info")){
+        return INFO;
+    
+    //Devuelve el código asociado a BYTEMAPS si el comando es bytemaps
+    } else if(!strcmp(strcomando, "bytemaps")){
+        return BYTEMAPS;
+    
+    //Devuelve el valor de DIR (código único) si el comando escrito es dir
+    } else if(!strcmp(strcomando, "dir")){
+        return DIR;
+
+    //Escanea un posible comando rename, y guarda el resultado en la variable declarada al principio
+    } else if(resultadoSscanf = sscanf(strcomando, "rename %s %s", argumento1, argumento2)){
+        //Si  el resultado es diferente de 2 (2 argumentos adicionales)
+        if(resultadoSscanf != 2){
+            //Muestra un mensaje de error, y devuelve el código asociado de ERROR
+            printf("Faltan argumentos para este comando...\n");
+            return ERROR;
+        } else {
+            //Todo está correcto, devuelve el código para renombrar el archivo
+            return RENAME;
+        }
+    
+    //Mismos pasos para rename, pero escanea un solo comando y un argumento
+    } else if(resultadoSscanf = sscanf(strcomando, "imprimir %s", argumento1)){
+        //Si falta un argumento, o hay más de los descritos
+        if(resultadoSscanf != 1){
+            //Muestra un mensaje de error, con una estructura de ejemplo, devuelve ERROR
+            printf("ERROR, estructura del comando: imprimir <nombre_del_archivo>\n\n");
+            return ERROR;
+        } else {
+            //El proceso es correcto, puede imprimir, por lo que se devuelve PRINT
+            return PRINT;
+        }
+    
+    //Si el comando es salir, el programa devuelve el código asociado a EXIT
+    } else if(!strcmp(strcomando, "salir")){
+        return EXIT;
+    
+    //Situación por defecto, cuando no se encuentra el comando
+    } else {
+        return NOT_RECOGNIZED; //Devuelve no reconocido
+    }
+    
+    /*
+        Aunque esta línea nunca se alcanza, por nomenclatura
+        se define que devuelva un valor no reconocido
+    */
+    return NOT_RECOGNIZED;
+}
+
+/**
+ * @brief Muestra información detallada sobre el superbloque
+ * @param psup Puntero a la estructura EXT_SIMPLE_SUPERBLOCK con la información
+ * @returns void
+ */
+void LeerSuperBloque(EXT_SIMPLE_SUPERBLOCK *psup){
+    //Mostrar información acerca de la partición, estos datos se guardan en ext_superblock
+    printf("Bloque                 = %d Bytes\n",   psup->s_block_size);            //Tamaño de cada bloque
+    printf("inodos particion       = %d\n",         psup->s_inodes_count);          //Cantidad de inodos disponibles en la partición
+    printf("inodos libres          = %d\n",         psup->s_free_inodes_count);     //Cantidad de inodos libres en la partición
+    printf("Bloques particion      = %d\n",         psup->s_blocks_count);          //Cantidad de bloques disponibles en la partición
+    printf("Bloques libres         = %d\n",         psup->s_free_blocks_count);     //Cantidad de bloques libres en la partición
+    printf("Primer bloque de datos = %d\n\n",       psup->s_first_data_block);      //Índice del primer bloque de datos
 }
 
 /**
@@ -175,21 +280,6 @@ void PrintBytemaps(EXT_BYTE_MAPS *ext_bytemaps){
 
     //Añade dos saltos de línea para el siguiente comando a ejecutar por el usuario
     printf("\n\n");
-}
-
-/**
- * @brief Muestra información detallada sobre el superbloque
- * @param psup Puntero a la estructura EXT_SIMPLE_SUPERBLOCK con la información
- * @returns void
- */
-void LeerSuperBloque(EXT_SIMPLE_SUPERBLOCK *psup){
-    //Mostrar información acerca de la partición, estos datos se guardan en ext_superblock
-    printf("Bloque                 = %d Bytes\n",   psup->s_block_size);            //Tamaño de cada bloque
-    printf("inodos particion       = %d\n",         psup->s_inodes_count);          //Cantidad de inodos disponibles en la partición
-    printf("inodos libres          = %d\n",         psup->s_free_inodes_count);     //Cantidad de inodos libres en la partición
-    printf("Bloques particion      = %d\n",         psup->s_blocks_count);          //Cantidad de bloques disponibles en la partición
-    printf("Bloques libres         = %d\n",         psup->s_free_blocks_count);     //Cantidad de bloques libres en la partición
-    printf("Primer bloque de datos = %d\n\n",       psup->s_first_data_block);      //Índice del primer bloque de datos
 }
 
 /**
@@ -254,6 +344,35 @@ int BuscarFichero(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, char *nom
 }
 
 /**
+ * @brief Renombra un archivo con un nombre antiguo y nuevo pasado por parámetro
+ * @param directorio Puntero a la entrada del directorio
+ * @param inodos Puntero al conjunto de inodos
+ * @param nombreAntiguo Nombre antiguo a buscar
+ * @param nombreNuevo Nombre nuevo del archivo
+ * @return Devuelve 0 en caso de éxito, -1 si no se encuentra el archivo, -2 si no se puede reemplazar
+ */
+int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, char *nombreAntiguo, char *nombreNuevo){
+    //Buscar el archivo con el nombre antiguo
+    for(int i=0; i<MAX_FICHEROS; i++){
+        //Si el nombre del fichero coincide con el antiguo, se ha encontrado
+        if(!strcmp(directorio[i].dir_nfich, nombreAntiguo)){
+            //Comprueba para todos los ficheros que el nombre no está en uso, en ese caso, devuelve -2
+            for(int j=0; j<MAX_FICHEROS; j++) if(!strcmp(directorio[j].dir_nfich, nombreNuevo)) return -2;
+            
+            //Copia el nombre del archivo en el array de nombres del directorio
+            strncpy(directorio[i].dir_nfich, nombreNuevo, LEN_NFICH);
+
+            //Devuelve 0, por lo que la acción se ha completado con éxito
+            return 0;
+        }
+    }
+
+    //Devuelve -1 dado que el bucle ha terminado y no ha devuelto datos
+    //Esto quiere decir que el archivo no se encontró
+    return -1;
+}
+
+/**
  * @brief Método para imprimir el contenido de un archivo
  * @param directorio Puntero a la entrada del directorio
  * @param inodos Puntero al conjunto de inodos
@@ -291,70 +410,6 @@ int Imprimir(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_DATOS *mem
     return 1; //Devuelve 1, la ejecución hipotéticamente se ha ejecutado correctamente 
 }
 
-/**
- * @brief Renombra un archivo con un nombre antiguo y nuevo pasado por parámetro
- * @param directorio Puntero a la entrada del directorio
- * @param inodos Puntero al conjunto de inodos
- * @param nombreAntiguo Nombre antiguo a buscar
- * @param nombreNuevo Nombre nuevo del archivo
- * @return Devuelve 0 en caso de éxito, -1 si no se encuentra el archivo, -2 si no se puede reemplazar
- */
-int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, char *nombreAntiguo, char *nombreNuevo){
-    //Buscar el archivo con el nombre antiguo
-    for(int i=0; i<MAX_FICHEROS; i++){
-        //Si el nombre del fichero coincide con el antiguo, se ha encontrado
-        if(!strcmp(directorio[i].dir_nfich, nombreAntiguo)){
-            //Comprueba para todos los ficheros que el nombre no está en uso, en ese caso, devuelve -2
-            for(int j=0; j<MAX_FICHEROS; j++) if(!strcmp(directorio[j].dir_nfich, nombreNuevo)) return -2;
-            
-            //Copia el nombre del archivo en el array de nombres del directorio
-            strncpy(directorio[i].dir_nfich, nombreNuevo, LEN_NFICH);
-
-            //Devuelve 0, por lo que la acción se ha completado con éxito
-            return 0;
-        }
-    }
-
-    //Devuelve -1 dado que el bucle ha terminado y no ha devuelto datos
-    //Esto quiere decir que el archivo no se encontró
-    return -1;
-}
-
-int ComprobarComando(char *strcomando, char *orden, char *argumento1, char *argumento2){
-
-   int resultadoSscanf;
-    
-    if(strcomando[0] == '\0'){
-        return NOTHING;
-    } else if(!strcmp(strcomando, "info")){
-        return INFO;
-    } else if(!strcmp(strcomando, "bytemaps")){
-        return BYTEMAPS;
-    }
-    else if(!strcmp(strcomando, "dir")){
-        return DIR;
-    } else if(resultadoSscanf = sscanf(strcomando, "rename %s %s", argumento1, argumento2)){
-        if(resultadoSscanf != 2){
-            printf("Faltan argumentos para este comando...\n");
-            return ERROR;
-        } else {
-            return RENAME;
-        }
-    } else if(resultadoSscanf = sscanf(strcomando, "imprimir %s", argumento1)){
-        if(resultadoSscanf != 1){
-            printf("ERROR, estructura del comando: imprimir <nombre_del_archivo>\n\n");
-            return ERROR;
-        } else {
-            return PRINT;
-        }
-    } else if(!strcmp(strcomando, "salir")){
-        return EXIT;
-    } else {
-        return NOT_RECOGNIZED;
-    }
-    
-    return 0;
-}
 
 int Borrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_BYTE_MAPS *ext_bytemaps,
         EXT_SIMPLE_SUPERBLOCK *ext_superblock, char *nombre,  FILE *fich){
