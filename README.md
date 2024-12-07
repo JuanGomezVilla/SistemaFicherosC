@@ -5,7 +5,15 @@
 
 SistemaFicherosC es un sistema de gestión ficheros simple basado en C, simulando de forma básica el sistema de gestión de ficheros de un sistema operativo convencional.
 
+> [!NOTE]
+> Es importante tener en cuenta que esto tiene una finalidad meramente educativa
 
+
+
+> [!NOTE]  Es importante tener en cuenta que esto tiene una finalidad meramente educativa
+
+<!-- prettier-ignore -->
+> [!NOTE]  Es importante tener en cuenta que esto tiene una finalidad meramente educativa
 
 
 ## Índice
@@ -55,8 +63,7 @@ SistemaFicherosC es un sistema de gestión ficheros simple basado en C, simuland
     Inodos: 1 1 1 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
     Bloques [0-25]: 1 1 1 1 0 0 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
     ```
-  > [!TIP]
-  > Se recomienda utilizar este comando durante la fase de desarrollo
+    > Se recomienda utilizar este comando durante la fase de desarrollo
 - Mostrar los archivos del directorio:
     ```bash
     >> dir
@@ -64,8 +71,7 @@ SistemaFicherosC es un sistema de gestión ficheros simple basado en C, simuland
     HOLA.txt        tamaño:11    inodo:5     bloques:4
     CHISTE.txt      tamaño:44    inodo:7     bloques:7
     ```
-> [!NOTE]
-> El comando obvia la entrada especial del directorio raíz, por lo tanto, no se mostrará.
+    > El comando obvia la entrada especial del directorio raíz, por lo tanto, no se mostrará.
 - Cambiar el nombre de un fichero. La estructura de este comando es la siguiente:
     ```bash
     rename nombre_antiguo nombre_nuevo
@@ -75,8 +81,7 @@ SistemaFicherosC es un sistema de gestión ficheros simple basado en C, simuland
     >> rename HOLA.txt ADIOS.txt
     El archivo se ha renombrado...
     ```
-> [!WARNING]
-> Si el nuevo nombre ya existe o no se encuentra el nombre del archivo, la acción no se llevará a cabo
+    > Si el nuevo nombre ya existe o no se encuentra el nombre del archivo, la acción no se llevará a cabo
 
 
 
