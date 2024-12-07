@@ -67,7 +67,7 @@ int BuscarFichero(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, char *nom
  * @param inodos Puntero al conjunto de inodos
  * @param nombreAntiguo Nombre antiguo a buscar
  * @param nombreNuevo Nombre nuevo del archivo
- * @return Devuelve 0 en caso de éxito, -1 si no se encuentra el archivo, -2 si no se puede reemplazar
+ * @returns Devuelve 0 en caso de éxito, -1 si no se encuentra el archivo, -2 si no se puede reemplazar
  */
 int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, char *nombreAntiguo, char *nombreNuevo);
 
@@ -77,7 +77,7 @@ int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, char *nombreA
  * @param inodos Puntero al conjunto de inodos
  * @param memdatos Puntero al conjunto de bloques de datos
  * @param nombre Nombre del archivo a imprimir
- * @return Devuelve un número entero, -1 si hubo errores, 1 en caso de éxito
+ * @returns Devuelve un número entero, -1 si hubo errores, 1 en caso de éxito
  */
 int Imprimir(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_DATOS *memdatos, char *nombre);
 
@@ -92,7 +92,15 @@ int Copiar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
 void Grabarinodosydirectorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, FILE *fich);
 void GrabarByteMaps(EXT_BYTE_MAPS *ext_bytemaps, FILE *fich);
 void GrabarSuperBloque(EXT_SIMPLE_SUPERBLOCK *ext_superblock, FILE *fich);
-void GrabarDatos(EXT_DATOS *memdatos, FILE *fich);
+
+/**
+ * @brief Método para grabar datos
+ * @param memdatos Puntero al conjunto de bloques de datos
+ * @param fichero Fichero donde escribir los datos
+ * @returns void
+ */
+void GrabarDatos(EXT_DATOS *memdatos, FILE *fichero);
+
 
 int main(){
     //Variables para los comandos a ejecutar
@@ -173,6 +181,9 @@ int main(){
             printf("Comando no reconocido: %s\n\n", comando);
         }
     }
+
+    //Antes de cerrar el archivo se graban los datos
+    GrabarDatos(memdatos, archivoParticion);
 
     //Cierra el archivo y finaliza la ejecución del programa
     fclose(archivoParticion);
@@ -349,7 +360,7 @@ int BuscarFichero(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, char *nom
  * @param inodos Puntero al conjunto de inodos
  * @param nombreAntiguo Nombre antiguo a buscar
  * @param nombreNuevo Nombre nuevo del archivo
- * @return Devuelve 0 en caso de éxito, -1 si no se encuentra el archivo, -2 si no se puede reemplazar
+ * @returns Devuelve 0 en caso de éxito, -1 si no se encuentra el archivo, -2 si no se puede reemplazar
  */
 int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, char *nombreAntiguo, char *nombreNuevo){
     //Buscar el archivo con el nombre antiguo
@@ -378,7 +389,7 @@ int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, char *nombreA
  * @param inodos Puntero al conjunto de inodos
  * @param memdatos Puntero al conjunto de bloques de datos
  * @param nombre Nombre del archivo a imprimir
- * @return Devuelve un número entero, -1 si hubo errores, 1 en caso de éxito
+ * @returns Devuelve un número entero, -1 si hubo errores, 1 en caso de éxito
  */
 int Imprimir(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_DATOS *memdatos, char *nombre){
     //Primero busca el archivo, puede que no exista o el usuario ha escrito un valor incorrecto
@@ -435,6 +446,16 @@ void GrabarSuperBloque(EXT_SIMPLE_SUPERBLOCK *ext_superblock, FILE *fich){
 
 }
 
-void GrabarDatos(EXT_DATOS *memdatos, FILE *fich){
+/**
+ * @brief Método para grabar datos
+ * @param memdatos Puntero al conjunto de bloques de datos
+ * @param fichero Fichero donde escribir los datos
+ * @returns void
+ */
+void GrabarDatos(EXT_DATOS *memdatos, FILE *fichero){
+    //Mover el puntero del archivo a la posición donde deben ir los bloques de datos
+    fseek(fichero, PRIM_BLOQUE_DATOS * SIZE_BLOQUE, 0);
 
+    //Escribir tantos bloques de datos como existan en el archivo
+    for(int i=0; i<MAX_BLOQUES_DATOS; i++) fwrite(&memdatos[i], SIZE_BLOQUE, 1, fichero);
 }
