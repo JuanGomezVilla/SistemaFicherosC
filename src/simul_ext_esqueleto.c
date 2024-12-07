@@ -82,15 +82,21 @@ int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, char *nombreA
 int Imprimir(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_DATOS *memdatos, char *nombre);
 
 
-//FUNCIONES NO PROCESADAS
 int Borrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
            char *nombre,  FILE *fich);
 int Copiar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
            EXT_DATOS *memdatos, char *nombreorigen, char *nombredestino,  FILE *fich);
-void Grabarinodosydirectorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, FILE *fich);
 
+/**
+ * @brief Graba en la partición los inodos y el directorio
+ * @param directorio Puntero que apunta al directorio que se debe grabar
+ * @param inodos Puntero a los inodos existentes
+ * @param fichero Archivo (la partición) donde escribir el directorio y los inodos
+ * @returns void
+ */
+void GrabarInodosyDirectorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, FILE *fichero);
 
 /**
  * @brief Función que escribe en el fichero de la partición el contenido de los bytemaps
@@ -174,20 +180,28 @@ int main(){
         } else if(operacion == INFO){                   LeerSuperBloque(&ext_superblock);
         } else if(operacion == BYTEMAPS){               PrintBytemaps(&ext_bytemaps);
         } else if(operacion == DIR){                    Directorio(directorio, &ext_blq_inodos);
+        } else if(operacion == PRINT){                  Imprimir(directorio, &ext_blq_inodos, memdatos, argumento1);
         } else if(operacion == RENAME){                 
             switch(Renombrar(directorio, &ext_blq_inodos, argumento1, argumento2)){
                 case 0:
+                    //El archivo se ha cambiado el nombre correctamente
                     printf("El archivo se ha renombrado...\n\n");
+
+                    //Escribe en el directorio, el bytemap y el superbloque
+                    //IMPORTANTE: esta acción se realiza sobre el fichero particion.bin
+                    GrabarInodosyDirectorio(directorio, &ext_blq_inodos, archivoParticion);
+                    GrabarByteMaps(&ext_bytemaps, archivoParticion);
+                    GrabarSuperBloque(&ext_superblock, archivoParticion);
                     break;
                 case -1:
+                    //Interpretación del código de error, en este caso no existe
                     printf("El archivo a renombrar no existe...\n\n");
                     break;
                 case -2:
+                    //El primer argumento es correcto, pero el nombre nuevo ya existe
                     printf("El nuevo nombre del archivo ya existe...\n\n");
                     break;
             }
-        
-        } else if(operacion == PRINT){                  Imprimir(directorio, &ext_blq_inodos, memdatos, argumento1);
         } else if(sscanf(comando, "remove %s", argumento1)){    Borrar(directorio, &ext_blq_inodos, &ext_bytemaps, &ext_superblock, argumento1, archivoParticion);
 
         } else if(operacion == NOT_RECOGNIZED) {
@@ -203,8 +217,6 @@ int main(){
     fclose(archivoParticion);
     return 0;
 }
-
-
 
 /**
  * @brief Función para comprobar un comando
@@ -448,8 +460,21 @@ int Copiar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
    return 0;
 }
 
-void Grabarinodosydirectorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, FILE *fich){
+/**
+ * @brief Graba en la partición los inodos y el directorio
+ * @param directorio Puntero que apunta al directorio que se debe grabar
+ * @param inodos Puntero a los inodos existentes
+ * @param fichero Archivo (la partición) donde escribir el directorio y los inodos
+ * @returns void
+ */
+void GrabarInodosyDirectorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, FILE *fichero){
+    //Mover el puntero del archivo a donde debe ir los inodos y escribirlo en la partición/fichero
+    fseek(fichero, SIZE_BLOQUE * 2, 0);
+    fwrite(inodos, SIZE_BLOQUE, 1, fichero);
 
+    //Mover el puntero del archivo a la posición donde debe ir el directorio y escribirlo en el fichero
+    fseek(fichero, SIZE_BLOQUE * 3, 0);
+    fwrite(directorio, SIZE_BLOQUE, 1, fichero);
 }
 
 /**
