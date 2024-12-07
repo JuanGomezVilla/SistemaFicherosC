@@ -47,13 +47,23 @@ int BuscarFichero(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, char *nom
  */
 int Imprimir(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_DATOS *memdatos, char *nombre);
 
+/**
+ * @brief Renombra un archivo con un nombre antiguo y nuevo pasado por parámetro
+ * @param directorio Puntero a la entrada del directorio
+ * @param inodos Puntero al conjunto de inodos
+ * @param nombreAntiguo Nombre antiguo a buscar
+ * @param nombreNuevo Nombre nuevo del archivo
+ * @return Devuelve 0 en caso de éxito, -1 si no se encuentra el archivo, -2 si no se puede reemplazar
+ */
+int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, char *nombreAntiguo, char *nombreNuevo);
+
+
+
 //FUNCIONES NO PROCESADAS
-int ComprobarComando(char *strcomando, char *orden, char *argumento1, char *argumento2);
-int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, 
-              char *nombreantiguo, char *nombrenuevo);
 int Borrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
            char *nombre,  FILE *fich);
+int ComprobarComando(char *strcomando, char *orden, char *argumento1, char *argumento2);
 int Copiar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
            EXT_DATOS *memdatos, char *nombreorigen, char *nombredestino,  FILE *fich);
@@ -119,6 +129,8 @@ int main(){
         } else if(!strcmp(comando, "bytemaps")){                PrintBytemaps(&ext_bytemaps);
         } else if(!strcmp(comando, "dir")){                     Directorio(directorio, &ext_blq_inodos);
         } else if(sscanf(comando, "imprimir %s", argumento1)){  Imprimir(directorio, &ext_blq_inodos, memdatos, argumento1);
+        } else if(sscanf(comando, "remove %s", argumento1)){    Borrar(directorio, &ext_blq_inodos, &ext_bytemaps, &ext_superblock, argumento1, archivoParticion);
+        } else if(sscanf(comando, "rename %s %s", argumento1, argumento2)){ Renombrar(directorio, &ext_blq_inodos, argumento1, argumento2);
         } else {
             //Comando no reconocido
             printf("Comando no reconocido: %s\n", comando);
@@ -181,7 +193,7 @@ void Directorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos){
             //Mostramos por salida formateada los datos del fichero
             printf("%-15s tama%co:%-5d inodo:%-5d bloques:",
                 directorio[i].dir_nfich,
-                164,    //Dado que la ñ es un carácter especial, escribo su código para que se muestre correctamente por consola
+                164, //Dado que la ñ es un carácter especial, escribo su código para que se muestre correctamente por consola
                 inodo.size_fichero,
                 directorio[i].dir_inodo
             );
@@ -262,19 +274,43 @@ int Imprimir(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_DATOS *mem
     return 1; //Devuelve 1, la ejecución hipotéticamente se ha ejecutado correctamente 
 }
 
+/**
+ * @brief Renombra un archivo con un nombre antiguo y nuevo pasado por parámetro
+ * @param directorio Puntero a la entrada del directorio
+ * @param inodos Puntero al conjunto de inodos
+ * @param nombreAntiguo Nombre antiguo a buscar
+ * @param nombreNuevo Nombre nuevo del archivo
+ * @return Devuelve 0 en caso de éxito, -1 si no se encuentra el archivo, -2 si no se puede reemplazar
+ */
+int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, char *nombreAntiguo, char *nombreNuevo){
+    //Buscar el archivo con el nombre antiguo
+    for(int i=0; i<MAX_FICHEROS; i++){
+        //Si el nombre del fichero coincide con el antiguo, se ha encontrado
+        if(!strcmp(directorio[i].dir_nfich, nombreAntiguo)){
+            //Comprueba para todos los ficheros que el nombre no está en uso, en ese caso, devuelve -2
+            for(int j=0; j<MAX_FICHEROS; j++) if(!strcmp(directorio[j].dir_nfich, nombreNuevo)) return -2;
+            
+            //Copiar el nombre del archivo en el array de nombres del directorio
+            strncpy(directorio[i].dir_nfich, nombreNuevo, LEN_NFICH);
+
+            //Devuelve 0, por lo que la acción se ha completado con éxito
+            return 0;
+        }
+    }
+
+    //Devuelve -1 dado que el bucle ha terminado y no ha devuelto datos
+    //Esto quiere decir que el archivo no se encontró
+    return -1;
+}
+
 int ComprobarComando(char *strcomando, char *orden, char *argumento1, char *argumento2){
    return 0;
 }
 
-int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, char *nombreantiguo, char *nombrenuevo){
-   return 0;
-}
-
-
-
 int Borrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_BYTE_MAPS *ext_bytemaps,
-            EXT_SIMPLE_SUPERBLOCK *ext_superblock, char *nombre,  FILE *fich){
-   return 0;
+        EXT_SIMPLE_SUPERBLOCK *ext_superblock, char *nombre,  FILE *fich){
+
+    return 1;
 }
 
 int Copiar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
