@@ -1,6 +1,9 @@
 # SistemaFicherosC
 Sistema de ficheros simple basado en C
 
+> [!TIP]
+> Se recomienda utilizar este comando durante la fase de desarrollo
+
 ## Índice
 1. [Instalación y desarrollo](#punto1)
 2. [Comandos](#punto2)
@@ -48,7 +51,7 @@ Sistema de ficheros simple basado en C
     Inodos: 1 1 1 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
     Bloques [0-25]: 1 1 1 1 0 0 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
     ```
-    
+
     > [!TIP]
     > Se recomienda utilizar este comando durante la fase de desarrollo
 - Mostrar los archivos del directorio:
