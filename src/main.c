@@ -6,6 +6,18 @@
 
 #define LONGITUD_COMANDO 100 //Longitud máxima de un comando
 
+enum Comandos {
+    ERROR = -1,
+    NOTHING = 0,
+    INFO = 1,
+    BYTEMAPS = 2,
+    DIR = 3,
+    RENAME = 4,
+    PRINT = 5,
+    EXIT = 9,
+    NOT_RECOGNIZED = 10
+};
+
 /**
  * @brief Imprime los inodos y bloques del sistema de archivos
  * @param ext_bytemaps Puntero a la estructura EXT_BYTE_MAPS, contiene la información a imprimir
@@ -116,24 +128,29 @@ int main(){
         //Texto para indicar al usuario la escritura de consola
         printf(">> ");
         
+        
+
         //Leer entrada del usuario, si fuera un texto NULO, continúa la ejecución
         if(fgets(comando, LONGITUD_COMANDO, stdin) == NULL) continue;
 
         //Eliminar el salto de línea del comando
         comando[strcspn(comando, "\n")] = '\0';
 
+        int operacion = ComprobarComando(comando, orden, argumento1, argumento2);
+
         //Comparativa de cada comando
-        if(comando[0] == '\0'){                                 continue; //El usuario no escribe valores
-        } else if(!strcmp(comando, "salir")){                   break;
-        } else if(!strcmp(comando, "info")){                    LeerSuperBloque(&ext_superblock);
-        } else if(!strcmp(comando, "bytemaps")){                PrintBytemaps(&ext_bytemaps);
-        } else if(!strcmp(comando, "dir")){                     Directorio(directorio, &ext_blq_inodos);
-        } else if(sscanf(comando, "imprimir %s", argumento1)){  Imprimir(directorio, &ext_blq_inodos, memdatos, argumento1);
+        if(operacion == NOTHING){                       continue; //El usuario no escribe valores
+        } else if(operacion == EXIT){                   break;
+        } else if(operacion == INFO){                   LeerSuperBloque(&ext_superblock);
+        } else if(operacion == BYTEMAPS){               PrintBytemaps(&ext_bytemaps);
+        } else if(operacion == DIR){                    Directorio(directorio, &ext_blq_inodos);
+        } else if(operacion == RENAME){                 Renombrar(directorio, &ext_blq_inodos, argumento1, argumento2);
+        } else if(operacion == PRINT){                  Imprimir(directorio, &ext_blq_inodos, memdatos, argumento1);
         } else if(sscanf(comando, "remove %s", argumento1)){    Borrar(directorio, &ext_blq_inodos, &ext_bytemaps, &ext_superblock, argumento1, archivoParticion);
-        } else if(sscanf(comando, "rename %s %s", argumento1, argumento2)){ Renombrar(directorio, &ext_blq_inodos, argumento1, argumento2);
-        } else {
-            //Comando no reconocido
-            printf("Comando no reconocido: %s\n", comando);
+        
+        } else if(operacion == NOT_RECOGNIZED) {
+            //Comando no reconocido (operacion será equivalente a NOT_RECOGNIZED)
+            printf("Comando no reconocido: %s\n\n", comando);
         }
     }
 
@@ -290,7 +307,7 @@ int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, char *nombreA
             //Comprueba para todos los ficheros que el nombre no está en uso, en ese caso, devuelve -2
             for(int j=0; j<MAX_FICHEROS; j++) if(!strcmp(directorio[j].dir_nfich, nombreNuevo)) return -2;
             
-            //Copiar el nombre del archivo en el array de nombres del directorio
+            //Copia el nombre del archivo en el array de nombres del directorio
             strncpy(directorio[i].dir_nfich, nombreNuevo, LEN_NFICH);
 
             //Devuelve 0, por lo que la acción se ha completado con éxito
@@ -304,7 +321,39 @@ int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, char *nombreA
 }
 
 int ComprobarComando(char *strcomando, char *orden, char *argumento1, char *argumento2){
-   return 0;
+
+   int resultadoSscanf;
+    
+    if(strcomando[0] == '\0'){
+        return NOTHING;
+    } else if(!strcmp(strcomando, "info")){
+        return INFO;
+    } else if(!strcmp(strcomando, "bytemaps")){
+        return BYTEMAPS;
+    }
+    else if(!strcmp(strcomando, "dir")){
+        return DIR;
+    } else if(resultadoSscanf = sscanf(strcomando, "rename %s %s", argumento1, argumento2)){
+        if(resultadoSscanf != 2){
+            printf("Faltan argumentos para este comando...\n");
+            return ERROR;
+        } else {
+            return RENAME;
+        }
+    } else if(resultadoSscanf = sscanf(strcomando, "imprimir %s", argumento1)){
+        if(resultadoSscanf != 1){
+            printf("ERROR, estructura del comando: imprimir <nombre_del_archivo>\n\n");
+            return ERROR;
+        } else {
+            return PRINT;
+        }
+    } else if(!strcmp(strcomando, "salir")){
+        return EXIT;
+    } else {
+        return NOT_RECOGNIZED;
+    }
+    
+    return 0;
 }
 
 int Borrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_BYTE_MAPS *ext_bytemaps,
