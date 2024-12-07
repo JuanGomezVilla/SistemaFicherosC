@@ -90,8 +90,23 @@ int Copiar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
            EXT_DATOS *memdatos, char *nombreorigen, char *nombredestino,  FILE *fich);
 void Grabarinodosydirectorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, FILE *fich);
-void GrabarByteMaps(EXT_BYTE_MAPS *ext_bytemaps, FILE *fich);
-void GrabarSuperBloque(EXT_SIMPLE_SUPERBLOCK *ext_superblock, FILE *fich);
+
+
+/**
+ * @brief Función que escribe en el fichero de la partición el contenido de los bytemaps
+ * @param ext_bytemaps Puntero que apunta al bloque de bytemaps
+ * @param fichero Puntero del fichero que viene siendo la partición
+ * @returns void
+ */
+void GrabarByteMaps(EXT_BYTE_MAPS *ext_bytemaps, FILE *fichero);
+
+/**
+ * @brief Método para grabar el contenido del superbloque en el fichero de la partición
+ * @param ext_superblock Puntero que apunta al superbloque de información
+ * @param fichero Fichero donde insertar los datos del superbloque (en este caso, al principio)
+ * @returns void
+ */
+void GrabarSuperBloque(EXT_SIMPLE_SUPERBLOCK *ext_superblock, FILE *fichero);
 
 /**
  * @brief Método para grabar datos
@@ -100,7 +115,6 @@ void GrabarSuperBloque(EXT_SIMPLE_SUPERBLOCK *ext_superblock, FILE *fich);
  * @returns void
  */
 void GrabarDatos(EXT_DATOS *memdatos, FILE *fichero);
-
 
 int main(){
     //Variables para los comandos a ejecutar
@@ -438,12 +452,32 @@ void Grabarinodosydirectorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos
 
 }
 
-void GrabarByteMaps(EXT_BYTE_MAPS *ext_bytemaps, FILE *fich){
+/**
+ * @brief Función que escribe en el fichero de la partición el contenido de los bytemaps
+ * @param ext_bytemaps Puntero que apunta al bloque de bytemaps
+ * @param fichero Puntero del fichero que viene siendo la partición
+ * @returns void
+ */
+void GrabarByteMaps(EXT_BYTE_MAPS *ext_bytemaps, FILE *fichero){
+    //Mueve el puntero a la ubicación donde van los bytemaps
+    fseek(fichero, SIZE_BLOQUE, 0);
 
+    //Escribe en el fichero de la partición el contenido de bytemaps
+    fwrite(ext_bytemaps, SIZE_BLOQUE, 1, fichero);
 }
 
-void GrabarSuperBloque(EXT_SIMPLE_SUPERBLOCK *ext_superblock, FILE *fich){
+/**
+ * @brief Método para grabar el contenido del superbloque en el fichero de la partición
+ * @param ext_superblock Puntero que apunta al superbloque de información
+ * @param fichero Fichero donde insertar los datos del superbloque (en este caso, al principio)
+ * @returns void
+ */
+void GrabarSuperBloque(EXT_SIMPLE_SUPERBLOCK *ext_superblock, FILE *fichero){
+    //Mueve el puntero del archivo al principio del todo (al primer superbloque)
+    fseek(fichero, 0, SEEK_SET);
 
+    //Escribir el contenido del superbloque en el archivo
+    fwrite(ext_superblock, SIZE_BLOQUE, 1, fichero);
 }
 
 /**
