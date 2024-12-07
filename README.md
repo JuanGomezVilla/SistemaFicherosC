@@ -24,7 +24,7 @@ SistemaFicherosC es un sistema de gestión de ficheros simple basado en C, simul
 <br><div id="punto1"></div>
 
 ## 1. Instalación y desarrollo
-1. Clona el repositorio en cualquier ubicación de tu ordenador:
+1. Clona el repositorio en un directorio de tu ordenador:
     ```bash
     git clone https://github.com/JuanGomezVilla/SistemaFicherosC.git
     ```
@@ -71,7 +71,7 @@ SistemaFicherosC es un sistema de gestión de ficheros simple basado en C, simul
     > El comando obvia la entrada especial del directorio raíz, por lo tanto, no se mostrará.
 - Cambiar el nombre de un fichero. La estructura de este comando es la siguiente:
     ```bash
-    rename nombre_antiguo nombre_nuevo
+    >> rename nombre_antiguo nombre_nuevo
     ```
     Para ejecutarlo, por ejemplo con el archivo _HOLA.txt_ a _ADIOS.txt_:
     ```bash
@@ -79,7 +79,32 @@ SistemaFicherosC es un sistema de gestión de ficheros simple basado en C, simul
     El archivo se ha renombrado...
     ```
     > Si el nuevo nombre ya existe o no se encuentra el nombre del archivo, la acción no se llevará a cabo
-
+- Imprimir el contenido de un archivo:
+    ```bash
+    >> imprimir nombre_del_archivo
+    ```
+    Por ejemplo, para imprimir el contenido de _HOLA.txt_:
+    ```bash
+    >> imprimir HOLA.txt
+    OLA KE ASE?
+    ```
+- Para eliminar un archivo de la partición:
+    ```bash
+    >> remove nombre_del_archivo
+    ```
+    Si queremos eliminar el archivo _CHISTE.txt_ procedemos con:
+    ```bash
+    >> remove CHISTE.txt
+    El archivo se ha eliminado correctamente...
+    ```
+- Para copiar un archivo en uno nuevo, que se crea automáticamente:
+    ```bash
+    copy ADIOS.txt Prueba.txt
+    ```
+- Cerrar el programa (evitar el uso de Ctrl + C):
+    ```bash
+    salir
+    ```
 
 
 <br><div id="punto3"></div>

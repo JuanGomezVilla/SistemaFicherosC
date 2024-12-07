@@ -4,7 +4,7 @@
 #include <ctype.h>
 #include "cabeceras.h"
 
-#define LONGITUD_COMANDO 100 //Longitud máxima de un comando
+#define LONGITUD_COMANDO 100 /* Longitud máxima de un comando */
 
 enum Comandos {
     ERROR = -1,             /* Código de error */
