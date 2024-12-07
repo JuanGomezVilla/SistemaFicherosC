@@ -1,8 +1,6 @@
 # SistemaFicherosC
 Sistema de ficheros simple basado en C
 
-> [!TIP]
-> Se recomienda utilizar este comando durante la fase de desarrollo
 
 ## Índice
 1. [Instalación y desarrollo](#punto1)
@@ -51,9 +49,8 @@ Sistema de ficheros simple basado en C
     Inodos: 1 1 1 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
     Bloques [0-25]: 1 1 1 1 0 0 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
     ```
-
-    > [!TIP]
-    > Se recomienda utilizar este comando durante la fase de desarrollo
+> [!TIP]
+> Se recomienda utilizar este comando durante la fase de desarrollo
 - Mostrar los archivos del directorio:
     ```bash
     >> dir
@@ -61,9 +58,8 @@ Sistema de ficheros simple basado en C
     HOLA.txt        tamaño:11    inodo:5     bloques:4
     CHISTE.txt      tamaño:44    inodo:7     bloques:7
     ```
-
-    > [!NOTE]
-    > El comando obvia la entrada especial del directorio raíz, por lo tanto, no se mostrará.
+> [!NOTE]
+> El comando obvia la entrada especial del directorio raíz, por lo tanto, no se mostrará.
 - Cambiar el nombre de un fichero. La estructura de este comando es la siguiente:
     ```bash
     rename nombre_antiguo nombre_nuevo
@@ -73,9 +69,8 @@ Sistema de ficheros simple basado en C
     >> rename HOLA.txt ADIOS.txt
     El archivo se ha renombrado...
     ```
-
-    > [!WARNING]
-    > Si el nuevo nombre ya existe o no se encuentra el nombre del archivo, la acción no se llevará a cabo
+> [!WARNING]
+> Si el nuevo nombre ya existe o no se encuentra el nombre del archivo, la acción no se llevará a cabo
 
 
 
