@@ -3,9 +3,7 @@
 [![SistemaFicherosC](https://img.shields.io/badge/version-v1.0.0-blue.svg)](#)
 [![SistemaFicherosC](https://img.shields.io/github/license/JuanGomezVilla/FlangerJS)](#)
 
-<style>
-p {text-align:justify;}
-</style>
+
 
 SistemaFicherosC es un sistema de gestión de ficheros simple basado en C, simulando de forma básica el sistema de gestión de directorios de un sistema operativo convencional. Utiliza un archivo de nombre _particion.bin_ que es considerado el archivo donde se almacenan los datos a trabajar, que son ficheros de texto.
 
