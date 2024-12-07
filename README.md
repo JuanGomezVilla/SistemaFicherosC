@@ -10,6 +10,7 @@ SistemaFicherosC es un sistema de gestión de ficheros simple basado en C, simul
 > [!NOTE]
 > Es importante tener en cuenta que esto tiene una finalidad meramente educativa
 
+<br>
 
 
 ## Índice
