@@ -55,8 +55,8 @@ SistemaFicherosC es un sistema de gestión ficheros simple basado en C, simuland
     Inodos: 1 1 1 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
     Bloques [0-25]: 1 1 1 1 0 0 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
     ```
-    > [!TIP]
-> Se recomienda utilizar este comando durante la fase de desarrollo
+ > [!TIP]
+ > Se recomienda utilizar este comando durante la fase de desarrollo
 - Mostrar los archivos del directorio:
     ```bash
     >> dir
