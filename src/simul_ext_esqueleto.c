@@ -679,7 +679,6 @@ int Copiar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
     return 0;
 }
 
-
 /**
  * @brief Graba en la partición los inodos y el directorio
  * @param directorio Puntero que apunta al directorio que se debe grabar

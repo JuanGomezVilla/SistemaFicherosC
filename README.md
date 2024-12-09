@@ -16,6 +16,7 @@ SistemaFicherosC es un sistema de gestión de ficheros simple basado en C, simul
 ## Índice
 1. [Instalación y desarrollo](#punto1)
 2. [Comandos](#punto2)
+3. [Anotaciones](#punto3)
 
 
 
@@ -102,4 +103,11 @@ SistemaFicherosC es un sistema de gestión de ficheros simple basado en C, simul
 - Cerrar el programa (evitar el uso de Ctrl + C):
     ```bash
     salir
-    ``` 
+    ```
+
+
+<br><div id="punto3"></div>
+
+## 3. Anotaciones
+- Es importante no cerrar el programa mediante un Ctrl + C, o de forma abrupta, en este caso, si se ha copiado un archivo o se ha modificado, el contenido puede que no se grabe de forma correcta.
+- No se puede reemplazar un archivo existente mediante la copia de otro y poniendo como nombre de destino el nombre de dicho archivo ya existente.
