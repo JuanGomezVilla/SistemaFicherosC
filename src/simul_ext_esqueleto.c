@@ -1,3 +1,4 @@
+
 //LIBRERÍAS
 #include <stdio.h>
 #include <string.h>
@@ -7,17 +8,17 @@
 #define LONGITUD_COMANDO 100 /* Longitud máxima de un comando */
 
 enum Comandos {
-    ERROR = -1,             /* Código de error */
-    NOTHING = 0,            /* El usuario no realiza acción alguna */
-    INFO = 1,               /* Comando para obtener la información */
-    BYTEMAPS = 2,           /* Comando para obtener los bytemaps */
-    DIR = 3,                /* Comando para mostrar el contenido del directorio */
-    RENAME = 4,             /* Comando para renombrar un archivo */
-    PRINT = 5,              /* Comando para imprimir el contenido de un archivo */
-    REMOVE = 6,             /* Comando para eliminar un archivo */
-    COPY = 7,               /* Comando para copiar un archivo */
-    EXIT = 8,               /* Comando para terminar la ejecución del programa */
-    NOT_RECOGNIZED = 9      /* Comando no reconocido */
+    ERROR           = -1,   /* Código de error, se puede utilizar en otros contextos */
+    NOTHING         = 0,    /* El usuario no realiza acción alguna */
+    INFO            = 1,    /* Comando para obtener la información */
+    BYTEMAPS        = 2,    /* Comando para obtener los bytemaps */
+    DIR             = 3,    /* Comando para mostrar el contenido del directorio */
+    RENAME          = 4,    /* Comando para renombrar un archivo */
+    PRINT           = 5,    /* Comando para imprimir el contenido de un archivo */
+    REMOVE          = 6,    /* Comando para eliminar un archivo */
+    COPY            = 7,    /* Comando para copiar un archivo */
+    EXIT            = 8,    /* Comando para terminar la ejecución del programa */
+    NOT_RECOGNIZED  = 9     /* Comando no reconocido */
 };
 
 /**
@@ -95,9 +96,21 @@ int Borrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
            char *nombre, FILE *fichero);
 
+/**
+ * @brief Método para copiar un archivo en uno nuevo
+ * @param directorio Puntero a la entrada del directorio
+ * @param inodos Puntero al conjunto de inodos
+ * @param ext_bytemaps Puntero a los bytemaps
+ * @param ext_superblock Puntero al superbloque de información
+ * @param memdatos Puntero al conjunto de bloques de datos
+ * @param nombreOrigen Nombre del archivo a copiar
+ * @param nombreDestino Nombre del archivo final, no puede existir un archivo con el mismo nombre
+ * @param fichero Puntero del fichero sobre el que escribir los resultados
+ * @returns Devuelve un número entero, 0 si está todo correcto, -1 si la acción no se ha podido realizar
+ */
 int Copiar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
-           EXT_DATOS *memdatos, char *nombreorigen, char *nombredestino,  FILE *fich);
+           EXT_DATOS *memdatos, char *nombreOrigen, char *nombreDestino,  FILE *fichero);
 
 /**
  * @brief Graba en la partición los inodos y el directorio
@@ -230,6 +243,32 @@ int main(){
                     printf("El archivo a eliminar no existe...\n\n");
                     break;
             }
+        } else if(operacion == COPY){
+            //A partir de un switch con la función Copiar (que devuelve un número) se interpreta la situación
+            switch(Copiar(directorio, &ext_blq_inodos, &ext_bytemaps, &ext_superblock, memdatos, argumento1, argumento2, archivoParticion)){
+                case 0:
+                    //Mensaje de hecho con éxito
+                    printf("El archivo se ha copiado...\n\n");
+                    
+                    //Graba en los inodos, el bytemaps y el superbloque la información nueva
+                    GrabarInodosyDirectorio(directorio, &ext_blq_inodos, archivoParticion);
+                    GrabarByteMaps(&ext_bytemaps, archivoParticion);
+                    GrabarSuperBloque(&ext_superblock, archivoParticion);
+
+                    break;
+                case -1:
+                    //El código -1 indica que el nombre de destino ya existe
+                    printf("El nombre de destino ya existe...\n\n");
+                    break;
+                case -2:
+                    //El código -2 indica que el archivo a copiar no existe
+                    printf("El archivo a copiar no existe...\n\n");
+                    break;
+                case -3:
+                    //El archivo no se puede crear, código -3
+                    printf("El archivo no se puede crear...\n\n");
+                    break;
+            }
         } else if(operacion == NOT_RECOGNIZED) {
             //Comando no reconocido (operacion será equivalente a NOT_RECOGNIZED)
             printf("Comando no reconocido: %s\n\n", comando);
@@ -306,6 +345,18 @@ int ComprobarComando(char *strcomando, char *orden, char *argumento1, char *argu
         } else {
             //El comando es correcto, envía el código asociado a eliminaciones
             return REMOVE;
+        }
+
+    //Si el comando es copiar un archivo, comprueba también por los argumentos
+    } else if(resultadoSscanf = sscanf(strcomando, "copy %s %s", argumento1, argumento2)){
+        //Si faltan 2 argumentos, no permite la ejecución 
+        if(resultadoSscanf != 2){
+            //Muestra un mensaje de error
+            printf("ERROR, debe haber dos argumentos...\n\n");
+            return ERROR;
+        } else {
+            //El comando es correcto, envía el código asociado para copiar el archivo
+            return COPY;
         }
 
     //Si el comando es salir, el programa devuelve el código asociado a EXIT
@@ -535,11 +586,99 @@ int Borrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_BYTE_MAPS *e
     return 0;
 }
 
+/**
+ * @brief Método para copiar un archivo en uno nuevo
+ * @param directorio Puntero a la entrada del directorio
+ * @param inodos Puntero al conjunto de inodos
+ * @param ext_bytemaps Puntero a los bytemaps
+ * @param ext_superblock Puntero al superbloque de información
+ * @param memdatos Puntero al conjunto de bloques de datos
+ * @param nombreOrigen Nombre del archivo a copiar
+ * @param nombreDestino Nombre del archivo final, no puede existir un archivo con el mismo nombre
+ * @param fichero Puntero del fichero sobre el que escribir los resultados
+ * @returns Devuelve un número entero, 0 si está todo correcto, -1 si la acción no se ha podido realizar
+ */
 int Copiar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
-           EXT_DATOS *memdatos, char *nombreorigen, char *nombredestino,  FILE *fich){
-   return 0;
+           EXT_DATOS *memdatos, char *nombreOrigen, char *nombreDestino, FILE *fichero){
+
+    //Buscar el fichero origen en el directorio
+    int inodoArchivoOrigen = BuscarFichero(directorio, inodos, nombreOrigen);    
+    if(inodoArchivoOrigen == -1) return -2;  //El fichero origen no se encuentra
+
+    //Verificar si el fichero destino ya existe en el directorio
+    if(BuscarFichero(directorio, inodos, nombreDestino) != -1) return -1; //El fichero de destino ya existe
+
+    //Buscar el primer inodo libre
+    int inodoLibre = -1;
+    for(int i=0; i<MAX_INODOS; i++){
+        //Si el inodo es 0, está libre, por lo que guarda el valor del iterador en la variable
+        if(ext_bytemaps->bmap_inodos[i] == 0){
+            inodoLibre = i;
+            ext_bytemaps->bmap_inodos[inodoLibre] = 1; //Se establece como ocupado
+            break; //Finaliza el bucle
+        }
+    }
+    
+    //Si no se encuentra un inodo libre, el valor seguirá siendo -1, se devuelve -3
+    if(inodoLibre == -1) return -3;
+
+    //Copia la información del inodo origen al inodo destino
+    EXT_SIMPLE_INODE *ext_inodoDestino = &inodos->blq_inodos[inodoLibre];
+    EXT_SIMPLE_INODE *ext_inodoOrigen = &inodos->blq_inodos[inodoArchivoOrigen];
+    
+    //Guarda en el inodo destino el tamaño del fichero de origen
+    ext_inodoDestino->size_fichero = ext_inodoOrigen->size_fichero;
+
+    //Inicia los bloques de destino a valores nulos
+    for(int i=0; i<MAX_NUMS_BLOQUE_INODO; i++) ext_inodoDestino->i_nbloque[i] = NULL_BLOQUE;
+
+    //Copia los bloques del fichero origen al destino
+    for(int i=0; i<MAX_NUMS_BLOQUE_INODO && ext_inodoOrigen->i_nbloque[i] != NULL_BLOQUE; i++){
+        //Guarda el bloque de origen para buscar posteriormente uno de destinoa
+        int bloqueOrigen = ext_inodoOrigen->i_nbloque[i];
+        int bloqueDestino = -1;
+
+        //Busca el primer bloque libre en el bytemap
+        for(int j=PRIM_BLOQUE_DATOS; j<MAX_BLOQUES_PARTICION; j++){
+            //Si el bloque en el bytemap es 0, es un bloque libre
+            if(ext_bytemaps->bmap_bloques[j] == 0){
+                //Establece el bloque de destino el del iterador y lo marca como ocupado
+                bloqueDestino = j;
+                ext_bytemaps->bmap_bloques[j] = 1;  
+                break; //Rompe el bucle
+            }
+        }
+        
+        //Si no hay bloques libres, retorna error (tener en cuenta que el -3 es que no se puede crear por falta de espacio libre, ya sea inodo o bloque)
+        if(bloqueDestino == -1) return -3;
+
+        //Copia los datos del bloque origen al bloque destino
+        memcpy(memdatos[bloqueDestino - PRIM_BLOQUE_DATOS].dato, memdatos[bloqueOrigen - PRIM_BLOQUE_DATOS].dato, SIZE_BLOQUE);
+
+        //Asigna el bloque destino al inodo bloque destino
+        ext_inodoDestino->i_nbloque[i] = bloqueDestino;
+    }
+
+    //Crea una entrada para el fichero destino en el directorio
+    for(int i=0; i<MAX_FICHEROS; i++){
+        //Si encuentra un inodo nulo, esstablece ahí el valor
+        if(directorio[i].dir_inodo == NULL_INODO){
+            //Copia el string de nombreDestino en la dirección libre, guarda también el inodo libre 
+            strncpy(directorio[i].dir_nfich, nombreDestino, LEN_NFICH);
+            directorio[i].dir_inodo = inodoLibre;
+            break; //Rompe el bucle
+        }
+    }
+
+    //Reduce la cantidad de inodos y bloques libres
+    ext_superblock->s_free_inodes_count--;
+    ext_superblock->s_free_blocks_count--;
+
+    //Devuelve el código 0 (el fichero se ha copiado correctamente)
+    return 0;
 }
+
 
 /**
  * @brief Graba en la partición los inodos y el directorio
