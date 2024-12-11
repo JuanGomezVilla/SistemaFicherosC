@@ -1,4 +1,3 @@
-
 //LIBRERÍAS
 #include <stdio.h>
 #include <string.h>
@@ -9,16 +8,16 @@
 
 enum Comandos {
     ERROR           = -1,   /* Código de error, se puede utilizar en otros contextos */
-    NOTHING         = 0,    /* El usuario no realiza acción alguna */
-    INFO            = 1,    /* Comando para obtener la información */
-    BYTEMAPS        = 2,    /* Comando para obtener los bytemaps */
-    DIR             = 3,    /* Comando para mostrar el contenido del directorio */
-    RENAME          = 4,    /* Comando para renombrar un archivo */
-    PRINT           = 5,    /* Comando para imprimir el contenido de un archivo */
-    REMOVE          = 6,    /* Comando para eliminar un archivo */
-    COPY            = 7,    /* Comando para copiar un archivo */
-    EXIT            = 8,    /* Comando para terminar la ejecución del programa */
-    NOT_RECOGNIZED  = 9     /* Comando no reconocido */
+    NOTHING         =  0,   /* El usuario no realiza acción alguna */
+    INFO            =  1,   /* Comando para obtener la información */
+    BYTEMAPS        =  2,   /* Comando para obtener los bytemaps */
+    DIR             =  3,   /* Comando para mostrar el contenido del directorio */
+    RENAME          =  4,   /* Comando para renombrar un archivo */
+    PRINT           =  5,   /* Comando para imprimir el contenido de un archivo */
+    REMOVE          =  6,   /* Comando para eliminar un archivo */
+    COPY            =  7,   /* Comando para copiar un archivo */
+    EXIT            =  8,   /* Comando para terminar la ejecución del programa */
+    NOT_RECOGNIZED  =  9    /* Comando no reconocido */
 };
 
 /**
@@ -195,6 +194,7 @@ int main(){
         //Eliminar el salto de línea del comando
         comando[strcspn(comando, "\n")] = '\0';
 
+        //Comprobar operación a realizar
         int operacion = ComprobarComando(comando, orden, argumento1, argumento2);
 
         //Comparativa de cada comando
